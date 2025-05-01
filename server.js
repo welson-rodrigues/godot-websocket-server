@@ -1,24 +1,24 @@
 // server.js
-const net = require('net');
-const PORT = process.env.PORT || 1027;
+const WebSocket = require('ws');
+const PORT = process.env.PORT || 8080;
 
-const server = net.createServer(socket => {
-  console.log('Cliente conectado:', socket.remoteAddress + ':' + socket.remotePort);
-  
-  socket.on('data', data => {
-    console.log('Recebido do cliente:', data.toString());
-    // Aqui você pode repassar dados a outros clientes, etc.
+const wss = new WebSocket.Server({ port: PORT });
+
+wss.on('connection', function connection(ws) {
+  console.log('Cliente conectado.');
+
+  ws.on('message', function incoming(message) {
+    console.log('Recebido do cliente:', message.toString());
+
+    // Enviar para todos os outros clientes
+    wss.clients.forEach(function each(client) {
+      if (client !== ws && client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
   });
 
-  socket.on('end', () => {
-    console.log('Cliente desconectado');
+  ws.on('close', () => {
+    console.log('Cliente desconectado.');
   });
-
-  socket.on('error', err => {
-    console.error('Erro no socket:', err);
-  });
-});
-
-server.listen(PORT, () => {
-  console.log(`Servidor TCP ouvindo na porta ${PORT}`);
 });
