@@ -1,16 +1,19 @@
-const WebSocket = require("ws");
+const http = require('http');
+const WebSocket = require('ws');
 
 const PORT = process.env.PORT || 8080;
-const wss = new WebSocket.Server({ port: PORT });
+
+const server = http.createServer();  // Cria servidor HTTP vazio
+
+const wss = new WebSocket.Server({ server });  // WebSocket em cima do HTTP
 
 wss.on("connection", function connection(ws) {
   console.log("Cliente conectado");
 
   ws.on("message", function incoming(message) {
-    // Aqui você pode logar ou repassar mensagens
     console.log("Recebido:", message.toString());
 
-    // Ecoar para todos (broadcast)
+    // Broadcast para todos os clientes conectados
     wss.clients.forEach(function each(client) {
       if (client !== ws && client.readyState === WebSocket.OPEN) {
         client.send(message);
@@ -23,4 +26,6 @@ wss.on("connection", function connection(ws) {
   });
 });
 
-console.log(`Servidor WebSocket escutando na porta ${PORT}`);
+server.listen(PORT, () => {
+  console.log(`Servidor WebSocket escutando na porta ${PORT}`);
+});
